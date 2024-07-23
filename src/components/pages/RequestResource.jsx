@@ -26,7 +26,7 @@ const RequestResource = ({ onSubmit }) => {
   };
 
   return (
-    <div className="bg-blue-300 overflow-y-scroll shadow">
+    <div className="bg-blue-300 overflow-y-scroll shadow" style={{ backgroundImage: 'url(https://i.makeagif.com/media/12-04-2018/IxHq7M.gif)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <div className="m-10">
         <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-6 text-gray-800">Request For Resources</h2>

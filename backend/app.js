@@ -90,6 +90,30 @@ app.post('/login', (req, res) => {
         }
     });
 });
+app.post('/tasks/:taskId/approve', async (req, res) => {
+  const { taskId } = req.params;
+
+  try {
+    // Update task status in the database
+    const query = 'UPDATE Tasks SET Task_Status = ? WHERE Task_Id = ? AND Task_Status = ?';
+    connection.query(query, ['Approved', taskId, 'Waiting For approval'], (error, results) => {
+      if (error) {
+        console.error('Error executing query:', error);
+        return res.status(500).send('Error approving task');
+      }
+
+      // Check if any rows were affected
+      if (results.affectedRows === 0) {
+        return res.status(404).send('Task not found or already approved');
+      }
+
+      res.status(200).send('Task status updated to Approved');
+    });
+  } catch (error) {
+    console.error('Error approving task:', error);
+    res.status(500).send('Error approving task');
+  }
+});
 app.post("/TaskSubmission", (req, res) => {
     const { Task_Name, Task_Description, Assigned_By, Assigned_TO, Start_Date, Due_Hours } = req.body;
   
@@ -130,9 +154,9 @@ app.post("/TaskSubmission", (req, res) => {
     });
     
     })
-app.post('/filter', (req, res) => {
+app.get('/ratings_fetch', (req, res) => {
     // Check if user already exists
-    connection.query('SELECT UserName FROM Supervisor', (error, results) => {
+    connection.query('SELECT * from Rating', (error, results) => {
         if (error) {
             console.error('Error executing query:', error);
             return res.status(500).json({ message: 'Failed to fetch data' });
@@ -190,5 +214,5 @@ app.get('/employee_fetch',  (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server is running on http:172.18.0.1//:${port}`);
 });

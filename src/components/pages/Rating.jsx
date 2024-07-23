@@ -20,8 +20,8 @@ const Rating = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-300 py-6 flex flex-col justify-center sm:py-12">
-      <div className="py-3 sm:max-w-xl sm:mx-auto">
+    <div className="min-h-screen bg-gray-300 py-6 flex flex-col justify-center "style={{ backgroundImage: 'url(https://img.freepik.com/premium-vector/abstract-modern-background-with-soft-blue-gradient-color-gradient-lowpoly-element_8221-1294.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+      <div className="py-3 sm:mx-auto m-10 ">
         <div className="bg-white min-w-1xl flex flex-col rounded-xl shadow-lg">
           <div className="px-12 py-5">
             <h2 className="text-gray-800 text-3xl font-semibold">Your opinion matters to us!</h2>

@@ -13,7 +13,7 @@ const Navbar2 = () => {
   };
 
   return (
-    <nav className="bg-[#1da1f2] border-gray-200 dark:bg-gray-900">
+    <nav className="bg-[#1da1f2] fixed top-0 w-full z-10 ">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
         <Link to="/" className="flex items-center space-x-3 rtl:space-x-reverse">
           <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
@@ -119,6 +119,7 @@ const Navbar2 = () => {
                 Task Status
               </Link>
             </li>
+            
             <li>
               <Link
                 to="/pantry"
