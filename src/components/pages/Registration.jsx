@@ -42,16 +42,16 @@ const Registration = () => {
       toast.error("Department is required.");
       return false;
     }
-    if (Role === "Supervisor") {
-      if (!Supervisor) {
-        toast.error("Supervisor ID is required for the Supervisor role.");
-        return false;
-      }
-      if (isNaN(Supervisor)) {
-        toast.error("Supervisor ID must be a number.");
-        return false;
-      }
-    }
+    // if (Role === "Supervisor") {
+    //   if (!Supervisor) {
+    //     toast.error("Supervisor ID is required for the Supervisor role.");
+    //     return false;
+    //   }
+    //   if (isNaN(Supervisor)) {
+    //     toast.error("Supervisor ID must be a number.");
+    //     return false;
+    //   }
+    // }
     if (!UserName) {
       toast.error("User Name is required.");
       return false;
@@ -75,7 +75,7 @@ const Registration = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/signup', {
+      const response = await fetch('http://localhost:5002/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ const Registration = () => {
   };
 
   return (
-    <div className="h-full w-full bg-gray-400 dark:bg-gray-900">
+    <div className="h-full min-h-screen w-full bg-gray-400 dark:bg-gray-900">
       <ToastContainer />
       <div className="mx-auto">
         <div className="flex justify-center px-1 py-12">

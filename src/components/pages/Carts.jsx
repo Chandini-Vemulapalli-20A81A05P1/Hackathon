@@ -5,48 +5,42 @@ const TaskList = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
 
   useEffect(() => {
-    // Fetch tasks from the API
-    axios.get('http://localhost:5000/tasks')
-      .then(response => {
+    const fetchTasks = async () => {
+      try {
+        const response = await axios.get('http://localhost:5002/tasks');
         setTasks(response.data);
-        console.log(response.data);
         setLoading(false);
-      })
-      .catch(error => {
+      } catch (error) {
         console.error('Error fetching tasks:', error);
         setError('Error fetching tasks.');
         setLoading(false);
-      });
+      }
+    };
+
+    fetchTasks();
   }, []);
 
-  const handleCompleteTask = ( Task_Id) => {
-    axios.post(`http://localhost:5000/Task_status`, {  Task_Id })
-      .then(response => {
-        // Update the task status locally
-        setTasks(prevTasks => prevTasks.map(task =>
-          task. Task_Id ===  Task_Id ? { ...task, Task_Status: 'Waiting For Approval' } : task
-        ));
-        console.log(`Task ${ Task_Id} marked as complete.`);
-      })
-      .catch(error => {
-        console.error('Error updating task:', error);
-        setError('Error updating task.');
-      });
+  const handleCompleteTask = async (taskId) => {
+    try {
+      const response = await axios.post(`http://localhost:5002/tasks/${taskId}/complete`);
+      console.log(response.data); // Confirm the backend response
+      setTasks(prevTasks => prevTasks.map(task =>
+        task.Task_Id === taskId ? { ...task, Task_Status: 'Waiting For Approval' } : task
+      ));
+      console.log(`Task ${taskId} marked as complete.`);
+    } catch (error) {
+      console.error('Error updating task:', error);
+      setError('Error updating task.');
+    }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
-    <div className="p-4 bg-blue-100 min-h-screen">
+    <div className="p-4 bg-gray-200 min-h-screen">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Tasks</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {tasks.map(task => (
@@ -61,9 +55,9 @@ const TaskList = () => {
             <button 
               className="mt-2 bg-green-500 text-white p-2 rounded hover:bg-green-700"
               onClick={() => handleCompleteTask(task.Task_Id)}
-              disabled={task.Task_Status === 'Completed'}
+              disabled={task.Task_Status === 'Approved' }
             >
-              {task.Task_Status === 'Completed' ? 'Completed' : 'Complete Task'}
+              {task.Task_Status === 'Approved' ? 'Approved' : 'Complete Task'}
             </button>
           </div>
         ))}

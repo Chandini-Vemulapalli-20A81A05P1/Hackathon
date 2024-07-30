@@ -17,7 +17,7 @@ const RequestResource = ({ onSubmit }) => {
     };
 
     try {
-      const response = await axios.post('http://localhost:5000/request', taskData);
+      const response = await axios.post('http://localhost:5002/request', taskData);
       console.log('Server response:', response.data);
       onSubmit(taskData); // Call the onSubmit prop if necessary
     } catch (error) {
@@ -26,7 +26,7 @@ const RequestResource = ({ onSubmit }) => {
   };
 
   return (
-    <div className="bg-blue-300 overflow-y-scroll shadow" style={{ backgroundImage: 'url(https://i.makeagif.com/media/12-04-2018/IxHq7M.gif)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+    <div className="bg-gray-200 min-h-screen mt-10 overflow-y-scroll shadow">
       <div className="m-10">
         <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-6 text-gray-800">Request For Resources</h2>

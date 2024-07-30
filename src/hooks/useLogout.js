@@ -10,7 +10,7 @@ const useLogout = () => {
      
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/logout');
+      const res = await axios.post('http://localhost:5002/logout');
        
        console.log("click");
      

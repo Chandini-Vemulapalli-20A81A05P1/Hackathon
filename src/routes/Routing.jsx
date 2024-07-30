@@ -28,7 +28,7 @@ const Routing = () => {
         <Route path='/tasks' element={authUser ? <Carts />:<Registration/>}></Route>
         <Route path="/requirement" element={authUser ?<RequestResource />:<Registration/>}></Route>
         <Route path="/Assigned Task" element={authUser ?<TaskForm />:<Registration/>}></Route>
-        <Route path="/track-status" element={authUser ?<Track_Status />:<Registration/>}></Route>
+        <Route path="/taskstatus" element={authUser ?<Track_Status />:<Registration/>}></Route>
         <Route path="/rating" element={authUser?<RatingList/>:<Registration/>}></Route>
         <Route path="/profile" element={ <ProfileSection />}/>
         <Route path="/employee" element={ <EmployeeDetails />}/>

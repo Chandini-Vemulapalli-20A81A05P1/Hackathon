@@ -8,7 +8,7 @@ const EmployeeDetails = () => {
 
   useEffect(() => {
     // Fetch tasks from the API
-    axios.get('http://localhost:5000/employee_fetch')
+    axios.get('http://localhost:5002/employee_fetch')
       .then(response => {
         console.log('Response data:', response.data); // Check the structure here
         // Assuming the response data is an array or contains an array in a specific property
@@ -31,7 +31,7 @@ const EmployeeDetails = () => {
   }
 
   return (
-    <div className="p-4 bg-blue-100 min-h-screen">
+    <div className="p-4 bg-blue-100 min-h-screen bg-gray-300 mt-3">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Tasks</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.isArray(tasks) && tasks.length > 0 ? (

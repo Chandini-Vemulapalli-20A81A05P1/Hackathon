@@ -30,7 +30,7 @@ const TaskForm = ({ onSubmit }) => {
     };
 
     try {
-      const response = await axios.post('http://localhost:5000/TaskSubmission', formattedTaskData);
+      const response = await axios.post('http://localhost:5002/TaskSubmission', formattedTaskData);
       console.log('Server response:', response.data);
       onSubmit(taskData); // Call the onSubmit prop if necessary
     } catch (error) {
@@ -40,11 +40,10 @@ const TaskForm = ({ onSubmit }) => {
 
   return (
     <div
-      className='h-full flex items-center justify-center '
-      style={{ backgroundImage: 'url(https://img.freepik.com/premium-vector/abstract-modern-background-with-soft-blue-gradient-color-gradient-lowpoly-element_8221-1294.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+      className='min-h-screen flex items-center justify-center mt-3 bg-gray-200'
     >
-      <div className="bg-white shadow-lg rounded-lg max-w-4xl w-full p-8 space-y-6 bg-opacity-80 m-3">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">Create New Task</h2>
+      <div className="bg-white shadow-lg rounded-lg p-8 space-y-6 bg-opacity-80 ">
+        <h2 className="text-3xl font-bold text-gray-800 ">Create New Task</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

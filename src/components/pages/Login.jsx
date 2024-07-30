@@ -27,10 +27,6 @@ const Login = () => {
       toast.error("Password is required.");
       isValid = false;
     }
-    // if (password.length < 6) {
-    //   toast.error("Password must be at least 6 characters long.");
-    //   isValid = false;
-    // }
 
     return isValid;
   };
@@ -44,21 +40,28 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/login', {
+      const response = await axios.post('http://localhost:5002/login', {
         UserName: user.username,
         Password: user.password,
       });
 
       console.log("Response:", response);
       const data = response.data.user;
+      const token = data.token; // Extract the token from the response
+
+      if (!token) {
+        throw new Error("Token not found in response");
+      }
+
       localStorage.setItem("app-User", JSON.stringify(data));
 
       setAuthUser(data);
 
+      // Set cookie with the token
       let d = new Date();
       d.setTime(d.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days
       let expires = "expires=" + d.toUTCString();
-      document.cookie = "jwt=" + data.token + ";" + expires + ";path=/";
+      document.cookie = `jwt=${token};${expires};path=/;SameSite=None;Secure`;
 
       if (response.status === 200) {
         toast.success("Successfully Logged In");
@@ -122,7 +125,6 @@ const Login = () => {
           <img src="https://cdn.vectorstock.com/i/500p/45/52/senior-woman-cleaning-house-with-vacuum-cleaner-vector-51144552.jpg" alt="" />
         </div>
       </div>
-      {/* ToastContainer should be included in the render */}
       <ToastContainer />
     </div>
   );

@@ -1,10 +1,11 @@
+import bcrypt from 'bcrypt';
 import bodyParser from 'body-parser';
 import cors from 'cors'; // Import the cors package
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import connection from './DBConnection.js';
-
 const app = express();
-const port = 5000;
+const port = 5002;
 
 // CORS Middleware
 app.use(cors()); // Enable CORS for all origins
@@ -30,7 +31,8 @@ app.post('/signup', async (req, res) => {
       } else {
         // Insert user into database
    
-        const hashpassword = Password;
+        const salt = await bcrypt.genSalt(10);
+        const hashpassword = await bcrypt.hash(Password, salt);
   
         if (Role === "Supervisor") {
           connection.query(
@@ -64,56 +66,122 @@ app.post('/signup', async (req, res) => {
       }
     });
   });
-app.post('/login', (req, res) => {
-    console.log("hello");
+  const JWT_SECRET = 'jdhgkjdhskvdskhvhkdgsvhdahkgv'; 
+  app.post('/login', (req, res) => {
     const { UserName, Password } = req.body;
 
     if (!UserName || !Password) {
-        return res.status(400).json({ message: 'Username and Password are required' });
+        return res.status(400).json({ message: 'UserName and Password are required' });
     }
-    
-    // Check if user exists and password matches
-    connection.query('SELECT * FROM Employee WHERE UserName = ? AND Password = ?', [UserName, Password], (err, results) => {
+
+    connection.query('SELECT * FROM Employee WHERE UserName = ?', [UserName], async (err, results) => {
         if (err) {
             console.error('Error executing query:', err);
             return res.status(500).json({ message: 'Failed to login' });
         }
 
         if (results.length > 0) {
-            // User found and authenticated
-            console.log('User authenticated successfully');
-            res.status(200).json({ message: 'Login successful', user: results[0] });
+            const user = results[0];
+            // Compare the provided password with the hashed password stored in the database
+            const isMatch = await bcrypt.compare(Password, user.Password);
+
+            if (isMatch) {
+                // Generate JWT token
+                const token = jwt.sign({ id: user.id, UserName: user.UserName }, JWT_SECRET, { expiresIn: '1h' });
+                // Set token in cookie
+                res.cookie('authToken', token, { httpOnly: true, secure: false }); // Set secure to true if using HTTPS
+                return res.status(200).json({
+                  message: 'Login successful',
+                  user: {
+                    Emp_Id: user.ID,
+                    UserName: user.UserName,
+                    Role: user.Role,
+                    token: token
+                  }
+                });
+            } else {
+                res.status(401).json({ message: 'Invalid username or password' });
+            }
         } else {
-            // User not found or password incorrect
-            console.log('Invalid username or password');
             res.status(401).json({ message: 'Invalid username or password' });
         }
     });
 });
-app.post('/tasks/:taskId/approve', async (req, res) => {
+// Example Node.js Express backend
+app.post('/tasks/:taskId/complete', (req, res) => {
   const { taskId } = req.params;
 
-  try {
-    // Update task status in the database
-    const query = 'UPDATE Tasks SET Task_Status = ? WHERE Task_Id = ? AND Task_Status = ?';
-    connection.query(query, ['Approved', taskId, 'Waiting For approval'], (error, results) => {
-      if (error) {
-        console.error('Error executing query:', error);
-        return res.status(500).send('Error approving task');
-      }
-
-      // Check if any rows were affected
-      if (results.affectedRows === 0) {
-        return res.status(404).send('Task not found or already approved');
-      }
-
-      res.status(200).send('Task status updated to Approved');
-    });
-  } catch (error) {
-    console.error('Error approving task:', error);
-    res.status(500).send('Error approving task');
-  }
+  const query = 'UPDATE Tasks SET Task_Status = ? WHERE Task_Id = ?';
+  connection.query(query, ['Waiting For Approval', taskId], (error, results) => {
+    if (error) {
+      console.error('Error executing query:', error);
+      return res.status(500).send('Error updating task status');
+    }
+    res.status(200).send('Task status updated to Waiting For Approval');
+  });
 });
+// const authenticateToken = (req, res, next) => {
+//   const token = req.cookies.authToken;
+  
+//   if (!token) return res.status(401).json({ message: 'Access denied' });
+  
+//   jwt.verify(token, JWT_SECRET, (err, user) => {
+//   if (err) return res.status(403).json({ message: 'Invalid token' });
+//   req.user = user; // Attach user info to request object
+//   next();
+//   });
+//   };
+app.post('/tasks/:taskId/approve', (req, res) => {
+  const { taskId } = req.params;
+
+  const query = 'UPDATE Tasks SET Task_Status = ? WHERE Task_Id = ? AND Task_Status = ?';
+  connection.query(query, ['Approved', taskId, 'Waiting For Approval'], (error, results) => {
+    if (error) {
+      console.error('Error executing query:', error);
+      return res.status(500).send('Error approving task');
+    }
+    if (results.affectedRows === 0) {
+      return res.status(404).send('Task not found or already approved');
+    }
+    res.status(200).send('Task status updated to Approved');
+  });
+});
+const authenticateJWT = (req, res, next) => {
+  const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: 'Failed to authenticate token' });
+    }
+
+    req.user = decoded; // Store the decoded token payload in req.user
+    next();
+  });
+};
+
+// Endpoint to get average rating
+app.get('/gettingrating', authenticateJWT, (req, res) => {
+  const { userid } = req.query; // Retrieve userid from query parameters
+  console.log("hello");
+  console.log(userid);
+
+  connection.query('SELECT AVG(Rating) as avgRating, Review FROM Rating WHERE Emp_Id = ?', [userid], (error, results) => {
+    if (error) {
+      console.error('Error executing query:', error);
+      return res.status(500).json({ message: 'Failed to get Employee rating!' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'No ratings found for this employee!' });
+    }
+    res.status(200).json({ avgRating: results[0].avgRating });
+  });
+});
+
+
 app.post("/TaskSubmission", (req, res) => {
     const { Task_Name, Task_Description, Assigned_By, Assigned_TO, Start_Date, Due_Hours } = req.body;
   
@@ -154,17 +222,17 @@ app.post("/TaskSubmission", (req, res) => {
     });
     
     })
-app.get('/ratings_fetch', (req, res) => {
-    // Check if user already exists
-    connection.query('SELECT * from Rating', (error, results) => {
-        if (error) {
-            console.error('Error executing query:', error);
-            return res.status(500).json({ message: 'Failed to fetch data' });
-        }
+// app.get('/ratings_fetch', (req, res) => {
+//     // Check if user already exists
+//     connection.query('SELECT * from Rating', (error, results) => {
+//         if (error) {
+//             console.error('Error executing query:', error);
+//             return res.status(500).json({ message: 'Failed to fetch data' });
+//         }
 
-        res.status(200).json(results); // Send the results as JSON
-    });
-});
+//         res.status(200).json(results); // Send the results as JSON
+//     });
+// });
 
 // Logout route
 app.post('/logout', (req, res) => {
@@ -172,35 +240,28 @@ res.clearCookie('authToken'); // Clear the authentication token cookie
 res.status(200).json({ message: 'Logout successful' });
 });
 
-app.post('/Task_status', (req, res) => {
-    const { Task_Id } = req.body;
-     console.log(Task_Id);
-    // Check if user already exists
-    connection.query('Update Tasks set Task_Status = "Waiting for approval" where Task_Id  = ? and Task_Status = "Pending"', [Task_Id], async (error, results) => 
-        {
-        if (error) {
-            console.error('Error executing query:', error);
-            return res.status(500).json({ message: 'Failed to register user' });
-        }
-        return res.status(200).json({ message: 'successfully changed task state! ' });
-
-
-    });
-});
 app.post('/rating_insert', (req, res) => {
-    
-    const { rating,Review } = req.body;
-       console.log(rating);
-    connection.query('Insert into Rating(Emp_Id, rating,Review) values(?, ?,?)',[1,rating,Review],
-        (error, results) => {
-            if (error) {
-                console.error('Error executing query:', error);
-                return res.status(500).json({ message: 'Failed to insert the rating' });
-            }
-            return res.status(200).json({ message: 'successfully inserting the rating to the task ' });
+  const { rating, review, Emp_Id} = req.body;
+  const query = 'INSERT INTO Rating (rating, review, Emp_Id) VALUES (?, ?, ?)';
+  connection.query(query, [rating, review, Emp_Id], (error, results) => {
+    if (error) {
+      console.error('Error inserting rating:', error);
+      return res.status(500).send('Error inserting rating');
+    }
+    res.status(200).send('Rating inserted successfully');
+  });
 });
-})
-
+// app.get('/ratings_fetch', (req, res) => {
+//   const { Emp_Id } = req.query;
+//   const query = 'SELECT rating, review FROM Rating WHERE Emp_Id = ?';
+//   connection.query(query, [Emp_Id], (error, results) => {
+//     if (error) {
+//       console.error('Error fetching ratings:', error);
+//       return res.status(500).send('Error fetching ratings');
+//     }
+//     res.status(200).json(results);
+//   });
+// });
 app.get('/employee_fetch',  (req, res) => {
  
     connection.query('SELECT * FROM Employee where Role="Employee"',  (error, results) => {
@@ -211,6 +272,19 @@ app.get('/employee_fetch',  (req, res) => {
        return  res.status(200).json({ message: 'Employees fetched successfully', requests: results }); // 200 OK status code
     });
 });
+app.get('/employee_fetch1',  (req, res) => {
+  const { userid } = req.query;
+  console.log(userid);
+  connection.query('SELECT * FROM Employee where Role="Employee" and ID=?',  [userid],(error, results) => {
+      if (error) {
+          console.error('Error executing query:', error);
+          return res.status(500).json({ message: 'Failed to get Employees under the supervisor!' });
+      }
+      console.log(results);
+     return  res.status(200).json({ message: 'Employees fetched successfully', requests: results }); // 200 OK status code
+  });
+});
+
 
 // Start the server
 app.listen(port, () => {
